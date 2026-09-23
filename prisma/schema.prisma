@@ -1,0 +1,112 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  password  String
+  role      Role     @default(STUDENT)
+  createdAt DateTime @default(now())
+}
+
+enum Role {
+  ADMIN
+  TEACHER
+  STUDENT
+  PARENT
+}
+
+model Student {
+  id             String   @id @default(cuid())
+  name           String
+  email          String   @unique
+  grade          String
+  section        String
+  guardianName   String
+  guardianPhone  String
+  enrollmentDate DateTime @default(now())
+  attendance     Attendance[]
+  grades         Grade[]
+  fees           Fee[]
+}
+
+model Teacher {
+  id          String      @id @default(cuid())
+  name        String
+  email       String      @unique
+  subject     String
+  department  String
+  classes     ClassRoom[] @relation("TeacherClasses")
+  createdAt   DateTime    @default(now())
+}
+
+model ClassRoom {
+  id         String     @id @default(cuid())
+  name       String
+  section    String
+  roomNumber String
+  teacherId  String
+  teacher    Teacher    @relation("TeacherClasses", fields: [teacherId], references: [id])
+  subjects   Subject[]
+  students   Student[]
+  createdAt  DateTime   @default(now())
+}
+
+model Subject {
+  id        String     @id @default(cuid())
+  name      String
+  code      String     @unique
+  classId   String
+  classRoom ClassRoom  @relation(fields: [classId], references: [id])
+  createdAt DateTime   @default(now())
+}
+
+model Attendance {
+  id        String   @id @default(cuid())
+  studentId String
+  student   Student  @relation(fields: [studentId], references: [id])
+  date      DateTime
+  present   Boolean
+  notes     String?
+}
+
+model Grade {
+  id        String   @id @default(cuid())
+  studentId String
+  student   Student  @relation(fields: [studentId], references: [id])
+  subject   String
+  exam      String
+  score     Float
+  grade     String
+}
+
+model Fee {
+  id        String   @id @default(cuid())
+  studentId String
+  student   Student  @relation(fields: [studentId], references: [id])
+  amount    Float
+  status    FeeStatus @default(PENDING)
+  dueDate   DateTime
+  paidDate  DateTime?
+}
+
+enum FeeStatus {
+  PAID
+  PENDING
+  OVERDUE
+}
+
+model Announcement {
+  id          String   @id @default(cuid())
+  title       String
+  message     String
+  audience    String
+  createdAt   DateTime @default(now())
+}
